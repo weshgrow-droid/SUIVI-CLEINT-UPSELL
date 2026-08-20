@@ -634,7 +634,6 @@ const TABS = [
   {key:'buysless', label:'Achètent moins', desc:'Toujours actifs, mais commandent moins souvent et/ou pour des montants plus faibles qu\u2019avant.'},
   {key:'variety', label:'Moins de variété', desc:'Toujours actifs, mais le nombre de références différentes achetées a baissé.'},
   {key:'crosssell', label:'Cross-sell grossistes', desc:'Par grossiste : variétés (format XS et fleurs) actives, arrêtées ou jamais achetées.'},
-  {key:'varieties', label:'Variétés grossistes', desc:'Classement des variétés (XS + fleurs) achetées par les grossistes, par chiffre d\u2019affaires.'},
   {key:'growth', label:'Nouvelles tendances', desc:'Grossistes qui démarrent une variété cette semaine, ou qui en achètent nettement plus que les 2 semaines précédentes.'}
 ];
 
@@ -651,11 +650,10 @@ function renderTabs(results){
     buysless: active.filter(r=>!r.inactive && r.buysLess).length,
     variety: active.filter(r=>!r.inactive && r.basketReduced).length,
     crosssell: crossData.rows.filter(r=>r.problemCount>0).length,
-    varieties: crossData.allVarieties.length,
     growth: growthData.rows.length
   };
   const controlsEl = document.querySelector('.controls');
-  if (controlsEl) controlsEl.style.display = (activeTab==='overview' || activeTab==='crosssell' || activeTab==='varieties' || activeTab==='growth') ? 'none' : 'flex';
+  if (controlsEl) controlsEl.style.display = (activeTab==='overview' || activeTab==='crosssell' || activeTab==='growth') ? 'none' : 'flex';
   const bar = document.getElementById('tabsBar');
   bar.innerHTML = TABS.map(t=>`
     <button class="tab-btn ${activeTab===t.key?'active':''}" data-tab="${t.key}">${t.label}<span class="count">${counts[t.key]}</span></button>
@@ -999,31 +997,6 @@ function renderCrossSell(){
   wirePauseButtons(wrap);
 }
 
-function renderVarietiesRanking(){
-  const {allVarieties, varietyCA, flowerVarieties} = computeCrossSell();
-  const wrap = document.getElementById('tableWrap');
-  if (!allVarieties.length){
-    wrap.innerHTML = `<div class="empty-state"><h2>Pas assez de données</h2><p>Importe des ventes en format XS ou fleurs chez des clients classés « Grossiste » pour voir cette analyse.</p></div>`;
-    return;
-  }
-  const vLabel = v => flowerVarieties.has(v) ? `${v} 🌸` : v;
-  const rowsHtml = allVarieties.map((v,i)=>`
-    <tr>
-      <td class="mono">${i+1}</td>
-      <td>${vLabel(v)}</td>
-      <td class="mono">${fmtEUR(varietyCA.get(v))}</td>
-    </tr>`).join('');
-  wrap.innerHTML = `
-    <div style="margin-bottom:16px;">
-      <p class="hint">🌸 = variété du secteur Fleurs (dont l\u2019oxalis). Classement par chiffre d\u2019affaires total chez les grossistes (format XS + fleurs).</p>
-    </div>
-    <table>
-      <thead><tr><th>#</th><th>Variété</th><th>CA total</th></tr></thead>
-      <tbody>${rowsHtml}</tbody>
-    </table>
-  `;
-}
-
 // ---------- Nouvelles tendances (démarrage ou forte hausse d'une variété) ----------
 function computeGrowthSignals(){
   let refDateSerial = 0;
@@ -1242,7 +1215,6 @@ function render(){
   renderClassifTable();
   if (activeTab==='overview') renderSynthese(results, refDateSerial);
   else if (activeTab==='crosssell') renderCrossSell();
-  else if (activeTab==='varieties') renderVarietiesRanking();
   else if (activeTab==='growth') renderGrowthSignals();
   else renderTable(results, refDateSerial);
 }
